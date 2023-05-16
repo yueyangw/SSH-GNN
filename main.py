@@ -1,2 +1,4 @@
-if __name__ == '__main__':
-    print("Hello World!")
+import numpy
+
+x = numpy.load("data/air_quality.npy")
+print(x.shape)
