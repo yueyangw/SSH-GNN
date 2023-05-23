@@ -3,7 +3,9 @@ import torch.nn as nn
 import numpy as np
 from lib.util import *
 import math
-
+K=8
+def dist(ri, rj):
+    return torch.sqrt((ri[0] - rj[0]) ** 2 + (ri[1] - rj[1]) ** 2)
 
 def similarity(xci, xcj):
     similarity = np.exp(-np.linalg.norm(xci - xcj))
@@ -19,56 +21,35 @@ class ContextualViewModel(nn.Module):
         W = torch.randn((feature_length, feature_length), dtype=torch.float64, requires_grad=True)
         self.W = nn.Parameter(W)
         self.d = torch.zeros(size)
-        for i in range(size[0]-1):
-            for j in range(size[1]-1):
-                sim=0
-                if (i != 0):
-                    sim += similarity(size1[i][j], size1[i - 1][j])
-                if (i != 0 & j!=0):
-                    sim += similarity(size1[i][j], size1[i - 1][j-1])
-                if (i != 0 & j != size[1]-1):
-                    sim += similarity(size1[i][j], size1[i - 1][j + 1])
-                if (j != 0):
-                    sim += similarity(size1[i][j], size1[i][j - 1])
-                if (j != size[1]-1):
-                    sim += similarity(size1[i][j], size1[i][j + 1])
-                if (i != size[0]-1):
-                    sim += similarity(size1[i][j], size1[i + 1][j])
-                if (j != 0 & i!=size[0]-1):
-                    sim += similarity(size1[i][j], size1[i +1][j - 1])
-                if (j != size[1]-1 & i != size[0]-1):
-                    sim += similarity(size1[i][j], size1[i + 1][j + 1])
-                self.d[i][j] = sim
+        self.nearest_neighbors = torch.zeros((size[0],size[1],K,3))
+        for i in range(15):
+            for j in range(15):
+                neighbor_context = []
+                for m in range(15):
+                    for n in range(15):
+                        if m != i or n != j:
+                            distance = dist(torch.tensor([i,j]), torch.tensor([m, n]))
+                            p_id = get_id_by_idx(m, n)
+                            neighbor_context.append((distance,p_id, similarity(size1[i][j],size1[m][n])))
+                neighbor_context.sort(key=lambda x: x[0])
+                self.nearest_neighbors[i][j] = torch.tensor(neighbor_context[:K])
 
     def forward(self, x: torch.Tensor):
         res = torch.zeros(x.shape)
         for i in range(self.size[0]-1):
             for j in range(self.size[1]-1):
-                if (i != 0):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i-1, j], self.W)
-                if (i != 0 & j!=0):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i - 1][j-1], self.W)
-                if (i != 0 & j != self.size[1]-1):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i - 1][j + 1], self.W)
-                if (j != 0):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i][j - 1], self.W)
-                if (j != self.size[1]-1):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i][j + 1], self.W)
-                if (i != self.size[0]-1):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i + 1][j], self.W)
-                if (j != 0 & i!=self.size[0]-1):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i + 1][j - 1], self.W)
-                if (j != self.size[1]-1 & i != self.size[0]-1):
-                    res[i, j] += self.d[i][j] * torch.matmul(x[i + 1][j + 1], self.W)
-                res[i, j] += self.d[i][j] * torch.matmul(x[i, j], self.W)
+                for k in range(K-1):
+                    stationx, stationy = self.nearest_neighbors[i][j][k][1] // self.size[0], self.nearest_neighbors[i][j][k][1] % self.size[1]
+
+                    res[i, j] += self.nearest_neighbors[i][j][k][2] * torch.matmul(x[stationx.long().item(), stationy.long().item()], self.W)
         return res
 
 
 if __name__ == '__main__':
 
     model = ContextualViewModel((15, 15))
-    x = np.load("data/air_quality.npy")
+    x = np.load("D:\杂七杂八\SSH-GNN\data/air_quality.npy")
     x = torch.from_numpy(x)
     print(x[0])
     y = model(x[0])
-    print(y)
+    print(y.shape)
