@@ -9,46 +9,50 @@ def similarity(xci, xcj):
     similarity = np.exp(-np.linalg.norm(xci - xcj))
     return similarity
 
-
 class ContextualViewModel(nn.Module):
 
-    def __init__(self, stations: list, size=(15, 10, 6), feature_length=7):
+    def __init__(self, size=(15, 15), feature_length=7):
         super(ContextualViewModel, self).__init__()
         self.size = size
         size1 = torch.randn(size)   # context feature
         self.feature_length = feature_length
         W = torch.randn((feature_length, feature_length), dtype=torch.float64, requires_grad=True)
         self.W = nn.Parameter(W)
-        self.d = [[[0 for _ in range(feature_length)] for _ in range(size[1])] for _ in range(size[0])]
-        self.stations = []
-        res = []
-        for i in range(feature_length):
-            self.stations.append(generalID(stations[i][0], stations[i][1]),)
-        for i in range(size[0]):
-            for j in range(size[1]):
-                for k in range(feature_length):
-                    xi,xj = stations[k][0], stations[k][1]
-                    for f in range(size[2]):
-                        ri = size1[xi][xj][f]
-                        rj = size1[i][j][f]
-                        sim = similarity(ri, rj)
-                        res.append(float(sim))
-                    self.d[i][j][k] = res
+        self.d = torch.zeros(size)
+        for i in range(size[0]-1):
+            for j in range(size[1]-1):
+                sim=0
+                if (i != 0):
+                    sim += similarity(size1[i][j], size1[i - 1][j])
+                if (i != 0 & j!=0):
+                    sim += similarity(size1[i][j], size1[i - 1][j-1])
+                if (i != 0 & j != size[1]-1):
+                    sim += similarity(size1[i][j], size1[i - 1][j + 1])
+                if (j != 0):
+                    sim += similarity(size1[i][j], size1[i][j - 1])
+                if (j != size[1]-1):
+                    sim += similarity(size1[i][j], size1[i][j + 1])
+                if (i != size[0]-1):
+                    sim += similarity(size1[i][j], size1[i + 1][j])
+                if (j != 0 & i!=size[0]-1):
+                    sim += similarity(size1[i][j], size1[i +1][j - 1])
+                if (j != size[1]-1 & i != size[0]-1):
+                    sim += similarity(size1[i][j], size1[i + 1][j + 1])
+                self.d[i][j] = sim
 
     def forward(self, x: torch.Tensor):
         res = torch.zeros(x.shape)
         for i in range(self.size[0]):
             for j in range(self.size[1]):
-                for k in range(self.feature_length):
-                    stationx, stationy = self.stations[k] // self.size[0], self.stations[k] % self.size[1]
-                    res[i, j] += self.d[i][j][k] * torch.matmul(x[stationx, stationy], self.W)
+                res[i, j] += self.d[i][j] * torch.matmul(x[i, j], self.W)
         return res
 
 
 if __name__ == '__main__':
 
-    model = ContextualViewModel(torch.randint(1,9,(7,2)), (15, 10, 6))
+    model = ContextualViewModel((15, 15))
     x = np.load("data/air_quality.npy")
     x = torch.from_numpy(x)
+    print(x[0])
     y = model(x[0])
     print(y)
