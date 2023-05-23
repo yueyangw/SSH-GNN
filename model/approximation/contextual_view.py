@@ -8,6 +8,8 @@ import math
 def similarity(xci, xcj):
     similarity = np.exp(-np.linalg.norm(xci - xcj))
     return similarity
+
+
 class ContextualViewModel(nn.Module):
 
     def __init__(self, stations: list, size=(15, 10), context_length=6):
@@ -27,21 +29,17 @@ class ContextualViewModel(nn.Module):
                     xi = stations[k][0]
                     p_id = get_id_by_idx(i, j)
                     xj = get_latlon_by_id(p_id)
-                    sim = similarity(xi,xj)
+                    sim = similarity(xi, xj)
                     sim.append(sim)
-                    self.d[i][j][k] =sim
+                    self.d[i][j][k] = sim
         self.delta = np.std(dists)
-
-
 
     def forward(self, x: torch.Tensor):
         res = torch.zeros(x.shape)
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 for k in range(self.context_length):
-
                     stationx, stationy = self.stations[k] // self.size[0], self.stations[k] % self.size[1]
-
                     res[i, j] += torch.matmul(x[stationx, stationy], self.W)
         return res
 
