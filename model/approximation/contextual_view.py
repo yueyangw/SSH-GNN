@@ -42,8 +42,24 @@ class ContextualViewModel(nn.Module):
 
     def forward(self, x: torch.Tensor):
         res = torch.zeros(x.shape)
-        for i in range(self.size[0]):
-            for j in range(self.size[1]):
+        for i in range(self.size[0]-1):
+            for j in range(self.size[1]-1):
+                if (i != 0):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i-1, j], self.W)
+                if (i != 0 & j!=0):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i - 1][j-1], self.W)
+                if (i != 0 & j != self.size[1]-1):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i - 1][j + 1], self.W)
+                if (j != 0):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i][j - 1], self.W)
+                if (j != self.size[1]-1):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i][j + 1], self.W)
+                if (i != self.size[0]-1):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i + 1][j], self.W)
+                if (j != 0 & i!=self.size[0]-1):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i + 1][j - 1], self.W)
+                if (j != self.size[1]-1 & i != self.size[0]-1):
+                    res[i, j] += self.d[i][j] * torch.matmul(x[i + 1][j + 1], self.W)
                 res[i, j] += self.d[i][j] * torch.matmul(x[i, j], self.W)
         return res
 
