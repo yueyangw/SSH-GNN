@@ -48,7 +48,7 @@ class ContextualViewModel(nn.Module):
 if __name__ == '__main__':
 
     model = ContextualViewModel((15, 15))
-    x = np.load("D:\杂七杂八\SSH-GNN\data/air_quality.npy")
+    x = np.load("ata/air_quality.npy")
     x = torch.from_numpy(x)
     print(x[0])
     y = model(x[0])
