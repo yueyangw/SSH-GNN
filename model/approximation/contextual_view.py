@@ -22,11 +22,11 @@ class ContextualViewModel(nn.Module):
         self.W = nn.Parameter(W)
         self.d = torch.zeros(size)
         self.nearest_neighbors = torch.zeros((size[0],size[1],K,3))
-        for i in range(15):
-            for j in range(15):
+        for i in range(size[0]):
+            for j in range(size[1]):
                 neighbor_context = []
-                for m in range(15):
-                    for n in range(15):
+                for m in range(size[0]):
+                    for n in range(size[1]):
                         if m != i or n != j:
                             distance = dist(torch.tensor([i,j]), torch.tensor([m, n]))
                             p_id = get_id_by_idx(m, n)
@@ -48,7 +48,7 @@ class ContextualViewModel(nn.Module):
 if __name__ == '__main__':
 
     model = ContextualViewModel((15, 15))
-    x = np.load("ata/air_quality.npy")
+    x = np.load("data/air_quality.npy")
     x = torch.from_numpy(x)
     print(x[0])
     y = model(x[0])
