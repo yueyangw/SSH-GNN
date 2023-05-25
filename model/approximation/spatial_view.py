@@ -28,7 +28,7 @@ class SpatialViewModel(nn.Module):
             self.stations.append(generalID(stations[i][0], stations[i][1]))
         for i in range(size[0]):
             for j in range(size[1]):
-                for k in range(feature_length):
+                for k in range(len(stations)):
                     lon, lat = stations[k][0], stations[k][1]
                     p_id = get_id_by_idx(i, j)
                     p_lat, p_lon = get_latlon_by_id(p_id)
