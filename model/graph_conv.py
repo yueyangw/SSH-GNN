@@ -23,8 +23,8 @@ class GConv(nn.Module):
             self.bias.data.uniform_(-std, std)
 
     def forward(self, input, adjacency_mat):
-        support = torch.mm(input, self.W)
-        output = torch.spmm(adjacency_mat, support)
+        support = torch.matmul(input, self.W)
+        output = torch.matmul(adjacency_mat, support)
         if self.bias is not None:
             return output + self.bias
         else:

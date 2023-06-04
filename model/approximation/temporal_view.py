@@ -13,39 +13,45 @@ class TemporalViewModel(nn.Module):
     """
 
     def __init__(self,
-                 batch_size: int,
+                 size: tuple,
                  spatial_size: int,
                  meteorology_size: int,
                  context_size: int,
-                 size: tuple,
                  batch_first=False,
                  hidden_size=32,
+                 device='cpu'
                  ):
         super(TemporalViewModel, self).__init__()
         input_size = spatial_size + meteorology_size + context_size
-        self.gru = nn.GRU(input_size, hidden_size=hidden_size, batch_first=batch_first, dtype=torch.float64)
-        self.h = torch.zeros(batch_size, hidden_size)
+        self.gru = nn.GRU(input_size, hidden_size=hidden_size, batch_first=batch_first)
         self.size = size
-        self.batch_size = batch_size
+        self.batch_first = batch_first
         self.spatial_size = spatial_size
-        W = torch.randn((hidden_size, spatial_size), dtype=torch.float64)
+        self.device = device
+        W = torch.randn((hidden_size, spatial_size))
         self.W = nn.Parameter(W)
 
     def forward(self, spatial, meteorology, context):
+        res = torch.zeros((spatial.size(0), self.size[0], self.size[1], self.spatial_size))
+        if self.batch_first:
+            spatial = spatial.repeat(meteorology.size(1), 1, 1, 1, 1)
+        else:
+            spatial = spatial.repeat(meteorology.size(0), 1, 1, 1, 1)
+        res = res.to(self.device)
+
         input_x = torch.cat((spatial, meteorology, context), dim=4)
-        res = torch.zeros((self.batch_size, self.size[0], self.size[1], self.spatial_size))
 
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 _, h = self.gru(input_x[:, :, i, j, :])
-                res[:, i, j, :] = torch.matmul(h[0], self.W)
+                res[:, i, j, :] = torch.matmul(h[-1], self.W)
 
         return res
 
 
 if __name__ == '__main__':
-    model = TemporalViewModel(32, 7, 3, 4, (15, 10))
-    spatial = torch.randn((12, 32, 15, 10, 7), dtype=torch.float64)
+    model = TemporalViewModel((15, 10), 7, 3, 4)
+    spatial = torch.randn((32, 15, 10, 7), dtype=torch.float64)
     meteorology = torch.randn((12, 32, 15, 10, 3), dtype=torch.float64)
     context = torch.randn((12, 32, 15, 10, 4), dtype=torch.float64)
     out = model(spatial, meteorology, context)

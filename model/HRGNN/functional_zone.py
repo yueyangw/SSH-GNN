@@ -17,20 +17,20 @@ class FuncGCN(nn.Module):
         Srz = self.soft_gcn(ctx, r_adj_mat)
         rz_adj_mat = self.softmax(Srz)
 
-        zone_value = torch.mm(torch.transpose(rz_adj_mat, 0, 1), u_val)
-        z_adj_mat = torch.mm(torch.mm(torch.transpose(rz_adj_mat, 0, 1), r_adj_mat), rz_adj_mat)
+        zone_value = torch.matmul(torch.transpose(rz_adj_mat, 2, 3), u_val)
+        z_adj_mat = torch.matmul(torch.matmul(torch.transpose(rz_adj_mat, 2, 3), r_adj_mat), rz_adj_mat)
         zone_output = self.gcn(zone_value, z_adj_mat)
-        zone_gate = self.sigmoid(torch.mm(torch.cat([mete, ctx], dim=1), self.zone_weight))
-        region_zone_output = zone_gate * torch.mm(rz_adj_mat, zone_output)
+        zone_gate = self.sigmoid(torch.matmul(torch.cat([mete, ctx], dim=3), self.zone_weight))
+        region_zone_output = zone_gate * torch.matmul(rz_adj_mat, zone_output)
 
         return zone_output, region_zone_output
 
 
 if __name__ == '__main__':
     model = FuncGCN(12, 7, 5, 8, 7)
-    u_val = torch.randn(15 * 10, 7)
-    mete_val = torch.randn(15 * 10, 5)
-    ctx_val = torch.randn(15 * 10, 8)
+    u_val = torch.randn(12, 32, 15 * 10, 7)
+    mete_val = torch.randn(12, 32, 15 * 10, 5)
+    ctx_val = torch.randn(12, 32, 15 * 10, 8)
     adj = torch.randn(15 * 10, 15 * 10)
     y = model(u_val, mete_val, ctx_val, adj)
     print(y[0].shape, y[1].shape)

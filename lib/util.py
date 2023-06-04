@@ -1,3 +1,5 @@
+import os.path
+
 import pandas as pd
 
 LON1 = 103.497579
@@ -18,8 +20,8 @@ def generalID(lon, lat, column_num=15, row_num=15):
     return int((lon - LON1) / column) + 1 + int((lat - LAT1) / row) * column_num
 
 
-def get_air_quality_stations():
-    pointdata = pd.read_csv('data/point.csv', encoding='UTF-8')
+def get_air_quality_stations(path):
+    pointdata = pd.read_csv(path, encoding='UTF-8')
     stations = []
     for i in range(7):
         stations.append((pointdata.iat[i, 3], pointdata.iat[i, 4]))
