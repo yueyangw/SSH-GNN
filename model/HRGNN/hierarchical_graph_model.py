@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from .region import RegionGCN
-from .functional_zone import FuncGCN
+from model.HRGNN.region import RegionGCN
+from model.HRGNN.functional_zone import FuncGCN
 
 
 class HierarchicalGraphModel(nn.Module):
@@ -33,6 +33,7 @@ class HierarchicalGraphModel(nn.Module):
         self.out_size = out_size
         self.regionGCN = RegionGCN(u_size, mete_size, ctx_size, hidden_size)
         self.funcGCN = FuncGCN(func_num, u_size, mete_size, ctx_size, hidden_size)
+        self.relu = nn.LeakyReLU(0.2)
 
     def forward(self, u_val, mete_val, ctx_val, adj_mat):
         if self.batch_first:
@@ -50,6 +51,7 @@ class HierarchicalGraphModel(nn.Module):
         _, h = self.gru(t_features)
         x = torch.squeeze(h)
         x = self.linear1(x)
+        x = self.relu(x)
         x = self.linear2(x)
         output = torch.reshape(x, [batch_size, regions, self.forecast_time, self.out_size])
         output = torch.permute(output, [2, 0, 1, 3])
@@ -63,6 +65,6 @@ if __name__ == '__main__':
     ctx_val = torch.randn(12, 32, 15 * 10, 8)
     adj = torch.randn(15 * 10, 15 * 10)
     y = model(u_val, mete_val, ctx_val, adj)
-    print(y)
+    print(y[0].shape)
 
 

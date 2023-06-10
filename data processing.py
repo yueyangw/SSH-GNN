@@ -83,7 +83,7 @@ for i in range(24 * 30):  # 时间范围
         CO.append(round(float(df3.iat[idx + 12, 3 + j]), 1))
     idx = idx + 15
     if idx == 10440:
-        break;
+        break
 
     c = {'lon': lon,
          'lat': lat,

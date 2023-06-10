@@ -15,6 +15,7 @@ class GConv(nn.Module):
         else:
             self.register_parameter('bias', None)
         self.init_parameters()
+        self.relu = nn.LeakyReLU(0.2)
 
     def init_parameters(self):
         std = 1.0 / math.sqrt(self.W.size(1))
@@ -26,6 +27,6 @@ class GConv(nn.Module):
         support = torch.matmul(input, self.W)
         output = torch.matmul(adjacency_mat, support)
         if self.bias is not None:
-            return output + self.bias
+            return self.relu(output + self.bias)
         else:
-            return output
+            return self.relu(output)

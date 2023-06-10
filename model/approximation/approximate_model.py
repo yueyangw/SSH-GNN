@@ -3,10 +3,10 @@ import time
 
 import torch
 import torch.nn as nn
-from lib.util import *
-from .contextual_view import ContextualViewModel
-from .temporal_view import TemporalViewModel
-from .spatial_view import SpatialViewModel
+from lib import get_air_quality_stations
+from model.approximation.contextual_view import ContextualViewModel
+from model.approximation.temporal_view import TemporalViewModel
+from model.approximation.spatial_view import SpatialViewModel
 
 
 def aggregate(xdi, xei, xsi):
@@ -24,6 +24,7 @@ class ApproximateModel(nn.Module):
     """
     def __init__(self,
                  map_size,
+                 stations,
                  ctx_features,
                  qa_features,
                  mete_features,
@@ -31,11 +32,9 @@ class ApproximateModel(nn.Module):
                  nearest_k=3,
                  batch_first=False,
                  activate_alpha=0.2,
-                 device='cpu'
-                 ):
+                 device='cpu'):
         super(ApproximateModel, self).__init__()
         self.contextual_model = ContextualViewModel(map_size, ctx_features, hidden_size, nearest_k, device)
-        stations = get_air_quality_stations('../../data/point.csv')
         self.spatial_model = SpatialViewModel(stations, map_size, qa_features, hidden_size, nearest_k, device)
         self.temporal_model = TemporalViewModel(map_size, hidden_size, mete_features, ctx_features, batch_first,
                                                 hidden_size, device)
@@ -66,7 +65,8 @@ class ApproximateModel(nn.Module):
 
 if __name__ == '__main__':
     device = 'cpu'
-    model = ApproximateModel((15, 10), 7, 7, 5, 32, 3, False, 0.2, device).to(device)
+    stations = get_air_quality_stations('../../data/point.csv')
+    model = ApproximateModel((15, 10), stations, 7, 7, 5, 32, 3, False, 0.2, device).to(device)
     batch = 32
     air_quality = torch.randn(12, batch, 15, 10, 7).to(device)
     mete = torch.randn(24, batch, 15, 10, 5).to(device)

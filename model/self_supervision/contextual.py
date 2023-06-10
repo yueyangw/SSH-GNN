@@ -65,18 +65,20 @@ class ContextualInference(nn.Module):
 
 if __name__ == '__main__':
     device = 'cpu'
-    in_model = ApproximateModel((15, 10), 7, 7, 5, 32, 3, False, 0.2, device).to(device)
+    stations = get_air_quality_stations('../../data/point.csv')
+    in_model = ApproximateModel((15, 10), stations, 7, 7, 5, 32, 3, False, 0.2, device).to(device)
     batch = 32
     air_quality = torch.randn(12, batch, 15, 10, 7).to(device)
     mete = torch.randn(24, batch, 15, 10, 5).to(device)
     ctx = torch.randn(24, batch, 15, 10, 7).to(device)
     model = ContextualInference(
         in_model,
-        get_air_quality_stations('../../data/point.csv'),
+        stations,
         (15, 10), 7, 32, 8, False, device
     )
     model = model.to(device)
     start = time.time()
     loss = model(air_quality, mete, ctx)
+    print(loss)
     loss.backward()
     print(time.time() - start)

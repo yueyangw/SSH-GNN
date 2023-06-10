@@ -1,2 +1,4 @@
 from model.approximation.approximate_model import ApproximateModel
 from model.HRGNN.hierarchical_graph_model import HierarchicalGraphModel
+from model.self_supervision.neighbor import NeighborPredict
+from model.self_supervision.contextual import ContextualInference
