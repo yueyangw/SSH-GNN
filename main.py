@@ -11,7 +11,10 @@ if __name__ == '__main__':
     # x = torch.from_numpy(x)
     # y = model(x[0])
     # print(y)
-    m = nn.Softmax(dim=1)
-    input = torch.randn(2, 3)
-    output = m(input)
-    print(output)
+    # x = np.load('data/air_quality.npy')
+    # print(x.shape)
+    data = np.load('data/new_data.npz')
+    arr1 = data['data']
+    print(arr1.shape)
+
+    np.save('data/airdata.npy', arr1)
