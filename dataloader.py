@@ -21,8 +21,7 @@ class AirQualityDataset(Dataset):
         poi_tensor = torch.tensor(poi, dtype=torch.float32)
         poi_tensor = poi_tensor.unsqueeze(0).repeat(695, 1, 1, 1)
         poi_tensor = poi_tensor.unsqueeze(0)
-        data = [air_tensor, mete_tensor, poi_tensor]
-        return data
+        return air_tensor, mete_tensor, poi_tensor
 
 
 file1 = "data/airdata.npy"
