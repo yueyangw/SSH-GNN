@@ -13,8 +13,8 @@ if __name__ == '__main__':
     # print(y)
     # x = np.load('data/air_quality.npy')
     # print(x.shape)
-    data = np.load('data/new_data.npz')
+    data = np.load('poi_data.npz')
     arr1 = data['data']
     print(arr1.shape)
+    np.save('data/poidata.npy',arr1)
 
-    np.save('data/airdata.npy', arr1)
