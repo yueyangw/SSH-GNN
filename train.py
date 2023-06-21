@@ -2,6 +2,7 @@ from model import SSH_GNN_Model
 import torch
 from torch import nn
 from lib import *
+import numpy as np
 from dataloader import get_train_loader, airdata_scalar
 
 
@@ -26,7 +27,9 @@ def get_loss(out, y_pre, loss_s, label, qu_val):
 
 def train(epochs, model, data_loader, learning_rate):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    best_loss = 9999999.0
     for epoch in range(epochs):
+        loss_arr = []
         for i, (qu_val, mete_val, ctx_val, label) in enumerate(data_loader):
             qu_val = qu_val.permute(1, 0, 2, 3, 4).to(device)
             mete_val = torch.permute(mete_val, (1, 0, 2, 3, 4)).to(device)
@@ -41,8 +44,10 @@ def train(epochs, model, data_loader, learning_rate):
 
             optimizer.step()
             print("epoch: {}, batch: {}, loss: {}".format(epoch+1, i+1, loss.data))
+            loss_arr.append(loss.data)
             print(airdata_scalar.inverse_transform(y_pre[0, 0, :, :, 0]))
-        torch.save(model, "myModel.pth")
+        if np.mean(loss_arr) < best_loss:
+            torch.save(model, "myModel_{}.pth".format(np.mean(loss_arr)))
 
 
 
