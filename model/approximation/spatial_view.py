@@ -29,7 +29,7 @@ class SpatialViewModel(nn.Module):
         self.nearest_k = nearest_k
         self.hidden_size = hidden_size
         self.device = device
-        W = torch.randn(qa_features, hidden_size)
+        W = torch.randn(qa_features, hidden_size, device=device)
         self.W = nn.Parameter(W)
         self.d = [[[0 for _ in range(len(stations))] for _ in range(size[1])] for _ in range(size[0])]
         dists = []
@@ -49,15 +49,15 @@ class SpatialViewModel(nn.Module):
         self.delta = np.std(dists)
 
     def proximity(self, posx, posy, station):
-        return math.exp(-self.d[posx][posy][station] / (self.delta ** 2))
+        return math.exp(-(self.d[posx][posy][station] ** 2) / (self.delta ** 2))
 
-    def forward(self, quaility_val: torch.Tensor):
-        res = torch.zeros(quaility_val.size(0), self.size[0], self.size[1], self.hidden_size).to(self.device)
+    def forward(self, quality_val: torch.Tensor):
+        res = torch.zeros(quality_val.size(0), self.size[0], self.size[1], self.hidden_size).to(self.device)
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 for k in range(self.nearest_k):
                     stationx, stationy = self.stations[k] // self.size[0], self.stations[k] % self.size[1]
-                    res[:, i, j] += self.proximity(i, j, k) * torch.matmul(quaility_val[:, stationx, stationy], self.W)
+                    res[:, i, j] += self.proximity(i, j, k) * torch.matmul(quality_val[:, stationx, stationy], self.W)
         return res
 
 

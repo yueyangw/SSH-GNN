@@ -42,7 +42,7 @@ class ContextualInference(nn.Module):
             mask_stations.append(x)
         masked_datas = []
         for id in mask_stations:
-            x = id // self.map_size[0]
+            x = id // self.map_size[1]
             y = id % self.map_size[1]
             masked_datas.append(qa_val[:, :, x, y, :].clone())
             qa_val[:, :, x, y, :] = torch.zeros_like(qa_val[:, :, x, y, :])
@@ -54,7 +54,7 @@ class ContextualInference(nn.Module):
 
         loss = torch.zeros([]).to(self.device)
         for i in range(len(mask_stations)):
-            x = mask_stations[i] // self.map_size[0]
+            x = mask_stations[i] // self.map_size[1]
             y = mask_stations[i] % self.map_size[1]
             out_state = out[:, :, x, y, :7]
             label = masked_datas[i]
