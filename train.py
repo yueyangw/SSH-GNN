@@ -36,6 +36,7 @@ def train(epochs, model, data_loader, learning_rate):
             ctx_val = torch.permute(ctx_val, (1, 0, 2, 3, 4)).to(device)
             label = torch.permute(label, (1, 0, 2, 3, 4)).to(device)
             # print(qu_val.shape, mete_val.shape, ctx_val.shape)
+            optimizer.zero_grad()
 
             output, y_pre, loss_s = model(qu_val, mete_val, ctx_val)
 
@@ -69,4 +70,4 @@ if __name__ == '__main__':
         device=device
     ).to(device)
 
-    train(200, ssh_gnn_model, train_loader, 0.0001)
+    train(500, ssh_gnn_model, train_loader, 0.001)

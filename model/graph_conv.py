@@ -9,9 +9,9 @@ class GConv(nn.Module):
         super(GConv, self).__init__()
         self.in_size = in_size
         self.out_size = out_size
-        self.W = nn.Parameter(torch.FloatTensor(in_size, out_size))
+        self.W = nn.Parameter(torch.rand(in_size, out_size))
         if bias:
-            self.bias = nn.Parameter(torch.FloatTensor(out_size))
+            self.bias = nn.Parameter(torch.rand(out_size))
         else:
             self.register_parameter('bias', None)
         self.init_parameters()
