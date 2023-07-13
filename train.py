@@ -7,7 +7,7 @@ from dataloader import get_train_loader, airdata_scalar
 
 
 stations = get_air_quality_stations('data/point.csv')
-device = 'cpu'
+device = 'cuda'
 
 
 def get_loss(out, y_pre, loss_s, label, qu_val):
@@ -36,6 +36,7 @@ def train(epochs, model, data_loader, learning_rate):
             ctx_val = torch.permute(ctx_val, (1, 0, 2, 3, 4)).to(device)
             label = torch.permute(label, (1, 0, 2, 3, 4)).to(device)
             # print(qu_val.shape, mete_val.shape, ctx_val.shape)
+            optimizer.zero_grad()
 
             output, y_pre, loss_s = model(qu_val, mete_val, ctx_val)
 
@@ -44,8 +45,8 @@ def train(epochs, model, data_loader, learning_rate):
 
             optimizer.step()
             print("epoch: {}, batch: {}, loss: {}".format(epoch+1, i+1, loss.data))
-            loss_arr.append(loss.data)
-            print(airdata_scalar.inverse_transform(y_pre[0, 0, :, :, 0]))
+            loss_arr.append(loss.data.cpu())
+            # print(airdata_scalar.inverse_transform(y_pre[0, 0, :, :, 0]))
         if np.mean(loss_arr) < best_loss:
             torch.save(model, "myModel_{}.pth".format(np.mean(loss_arr)))
 
@@ -69,4 +70,4 @@ if __name__ == '__main__':
         device=device
     ).to(device)
 
-    train(10, ssh_gnn_model, train_loader, 0.001)
+    train(500, ssh_gnn_model, train_loader, 0.001)

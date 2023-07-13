@@ -11,7 +11,7 @@ class FuncGCN(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.gcn = GConv(u_features, out_features)
         self.sigmoid = nn.Sigmoid()
-        self.zone_weight = nn.Parameter(torch.FloatTensor(mete_features + ctx_features, out_features))
+        self.zone_weight = nn.Parameter(torch.rand(mete_features + ctx_features, out_features))
 
     def forward(self, u_val, mete, ctx, r_adj_mat):
         Srz = self.soft_gcn(ctx, r_adj_mat)
